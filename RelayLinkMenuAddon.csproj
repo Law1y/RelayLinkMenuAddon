@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>RelayLinkMenuAddon</AssemblyName>
+    <RootNamespace>RelayLinkMenuAddon</RootNamespace>
+  </PropertyGroup>
+
+  <!-- Defaults when built standalone (the monorepo sets these in Directory.Build.props). -->
+  <PropertyGroup>
+    <PuckDir Condition="'$(PuckDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Puck</PuckDir>
+    <PuckManaged Condition="'$(PuckManaged)' == ''">$(PuckDir)\Puck_Data\Managed</PuckManaged>
+    <PuckPlugins Condition="'$(PuckPlugins)' == ''">$(PuckDir)\Plugins</PuckPlugins>
+  </PropertyGroup>
+
+  <!-- Reference the game's assemblies straight from the install folder. -->
+  <ItemGroup>
+    <GameLibs Include="$(PuckManaged)\*.dll"
+              Exclude="$(PuckManaged)\System*.dll;$(PuckManaged)\mscorlib.dll;$(PuckManaged)\netstandard.dll;$(PuckManaged)\Mono.*.dll;$(PuckManaged)\Microsoft.*.dll" />
+    <Reference Include="@(GameLibs)">
+      <HintPath>%(GameLibs.FullPath)</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- After each build, copy the DLL into Puck\Plugins\RelayLinkMenuAddon for testing. -->
+  <Target Name="DeployToPlugins" AfterTargets="Build" Condition="Exists('$(PuckPlugins)')">
+    <PropertyGroup>
+      <DeployDir>$(PuckPlugins)\$(AssemblyName)</DeployDir>
+    </PropertyGroup>
+    <MakeDir Directories="$(DeployDir)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(DeployDir)" OverwriteReadOnlyFiles="true" ContinueOnError="true" />
+    <Message Importance="high" Text="Deployed $(AssemblyName).dll to $(DeployDir)" />
+  </Target>
+
+</Project>
